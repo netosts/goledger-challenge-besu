@@ -84,7 +84,7 @@ if ! docker network ls | grep -q besu_network; then
 fi
 
 echo "Starting bootnode"
-docker-compose -f docker/docker-compose-bootnode.yaml up -d
+docker compose -f docker/docker-compose-bootnode.yaml up -d
 
 # Retrieve bootnode enode address
 max_retries=30
@@ -120,7 +120,7 @@ echo $E_ADDRESS
 sed "s/<ENODE>/enode:\/\/$E_ADDRESS/g" docker/templates/docker-compose-nodes.yaml > docker/docker-compose-nodes.yaml
 
 echo "Starting nodes"
-docker-compose -f docker/docker-compose-nodes.yaml up -d
+docker compose -f docker/docker-compose-nodes.yaml up -d
 
 echo "============================="
 echo "Network started successfully!"
