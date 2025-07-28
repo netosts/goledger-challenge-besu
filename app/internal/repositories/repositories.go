@@ -28,6 +28,9 @@ func (r *PostgresRepository) GetValue() (*models.StoredValue, error) {
 
 	err := r.db.QueryRow(query).Scan(&sv.ID, &sv.Value, &sv.CreatedAt, &sv.UpdatedAt)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("no values found in database")
+		}
 		return nil, fmt.Errorf("failed to get value: %w", err)
 	}
 
@@ -41,9 +44,22 @@ func (r *PostgresRepository) SetValue(value uint64) error {
 	WHERE id = (SELECT id FROM stored_values ORDER BY updated_at DESC LIMIT 1)
 	`
 
-	_, err := r.db.Exec(query, value, time.Now())
+	result, err := r.db.Exec(query, value, time.Now())
 	if err != nil {
 		return fmt.Errorf("failed to set value: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to check affected rows: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		insertQuery := `INSERT INTO stored_values (value, created_at, updated_at) VALUES ($1, $2, $2)`
+		_, err := r.db.Exec(insertQuery, value, time.Now())
+		if err != nil {
+			return fmt.Errorf("failed to insert initial value: %w", err)
+		}
 	}
 
 	return nil
