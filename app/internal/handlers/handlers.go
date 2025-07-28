@@ -3,6 +3,8 @@ package handlers
 import (
 	"net/http"
 
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/netosts/goledger-challenge-besu/internal/models"
 	"github.com/netosts/goledger-challenge-besu/internal/usecases"
@@ -27,7 +29,17 @@ func (h *Handler) SetValue(c *gin.Context) {
 		return
 	}
 
+	if req.Value > 1e18 {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{
+			Error: "Value too large",
+		})
+		return
+	}
+
+	log.Printf("Setting value to %d", req.Value)
+
 	if err := h.contractUseCase.SetValue(req.Value); err != nil {
+		log.Printf("Failed to set value: %v", err)
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
 			Error: "Failed to set value: " + err.Error(),
 		})
