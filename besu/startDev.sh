@@ -23,10 +23,10 @@ echo "Cleaning up previous data"
 docker rm -f besu-node-0 besu-node-1 besu-node-2 besu-node-3 
 
 # Clean up data dir from each node
-rm -rf node/besu-0/data
-rm -rf node/besu-1/data
-rm -rf node/besu-2/data
-rm -rf node/besu-3/data
+sudo rm -rf node/besu-0/data
+sudo rm -rf node/besu-1/data
+sudo rm -rf node/besu-2/data
+sudo rm -rf node/besu-3/data
 
 rm -rf genesis
 rm -rf ignition/deployments
