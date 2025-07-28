@@ -77,3 +77,9 @@ func (h *Handler) CheckValue(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
+
+func (h *Handler) HealthCheck(c *gin.Context) {
+	c.JSON(http.StatusOK, models.SuccessResponse{
+		Message: "Service is healthy",
+	})
+}
