@@ -111,7 +111,7 @@ Your task is to create a simple application that interacts with a Besu blockchai
    - ✅ The source code of the application should be hosted on a public GitHub repository forked from this one.
    - ✅ Include a README file with instructions on how to run the application.
 2. **Documentation:**
-   - ✅ Provide a brief explanation of the application's architecture and how it interacts with the Besu network and the SQL database.
+   - ✅ Provide a brief explanation of the application's architecture and how it interacts with the Besu network and the SQL database. ([`app/README.md`](./app/README.md))
    - ✅ Include any additional information you think is relevant.
    - ✅ This can be done in the README file or as a separate Markdown file.
 
