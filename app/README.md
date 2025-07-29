@@ -137,7 +137,7 @@ curl localhost:8080/api/v1/check
 ## Database Schema
 
 ```sql
-CREATE TABLE stored_values (
+CREATE TABLE contract_values (
     id SERIAL PRIMARY KEY,
     value BIGINT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

@@ -93,7 +93,7 @@ func (uc *ContractUseCase) CheckValue() (*models.CheckResponse, error) {
 		return nil, fmt.Errorf("failed to get blockchain value: %w", err)
 	}
 
-	storedValue, err := uc.repo.GetValue()
+	storedValue, err := uc.repo.GetLatestValue()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get database value: %w", err)
 	}

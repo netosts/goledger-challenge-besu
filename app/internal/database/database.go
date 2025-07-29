@@ -45,7 +45,7 @@ func (c *Config) Connect() (*sql.DB, error) {
 
 func InitializeSchema(db *sql.DB) error {
 	query := `
-	CREATE TABLE IF NOT EXISTS stored_values (
+	CREATE TABLE IF NOT EXISTS contract_values (
 		id SERIAL PRIMARY KEY,
 		value BIGINT NOT NULL,
 		created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -53,9 +53,9 @@ func InitializeSchema(db *sql.DB) error {
 	);
 
 	-- Insert initial record if none exists
-	INSERT INTO stored_values (value) 
+	INSERT INTO contract_values (value) 
 	SELECT 0 
-	WHERE NOT EXISTS (SELECT 1 FROM stored_values);
+	WHERE NOT EXISTS (SELECT 1 FROM contract_values);
 	`
 
 	_, err := db.Exec(query)
