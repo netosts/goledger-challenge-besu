@@ -1,5 +1,7 @@
 # GoLedger Challenge - Besu Edition
 
+Jump to the [How to run the application section](#how-to-run-the-application).
+
 On this challenge, you will interact with a Besu node. The goal is to create a simple application that will interact with a Besu node to transact in a smart contract, check the value of a smart contract variable and sync that value to an external database.
 
 To accomplish that, we recommend you use a UNIX-like machine (Linux/macOS). Besides that, we will need to install NPM/NPX, Hardhat and Docker.
@@ -46,7 +48,7 @@ docker logs -f besu_node-0
 
 This will also deploy a smart contract to the network. The contract is a simple storage contract that has a variable that can be set and get. Note that it will log the contracts address, which will be important later. If you want to check the contract's source code, you can find it in the `contracts` folder. The contract's ABI can be found in the `/besu/artifacts/contracts/SimpleStorage.sol/SimpleStorage.json` file.
 
-# The Challenge & Solution
+# The Challenge
 
 Your task is to create a simple application that interacts with a Besu blockchain network and an SQL database. The application should be implemented in Go and expose its functionality as either a REST API or a gRPC service.
 
@@ -117,16 +119,16 @@ Remember to commit your changes to your forked repository. Commits will be used 
 
 ---
 
-## Running the Solution
+# How to run the application
 
-### Prerequisites
+### Install the prerequisites
 
-Ensure you have the following installed:
-
-- **Node.js** (v16+) and npm
-- **Docker** and Docker Compose
-- **Go** (v1.21+)
-- **Git**
+- Install NPM and NPX (https://www.npmjs.com/get-npm)
+- Install Hardhat (https://hardhat.org/getting-started/)
+- Install Docker and Docker Compose (https://www.docker.com/)
+- Install Besu (https://besu.hyperledger.org/private-networks/get-started/install/binary-distribution)
+- Install Go (https://golang.org/dl/)
+- Install jq (https://jqlang.org/download/)
 
 ### Quick Start Guide
 
@@ -192,10 +194,10 @@ PRIVATE_KEY=8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63 # U
 
 ```bash
 # Start PostgreSQL database
-docker-compose up -d postgres
+docker compose up -d postgres
 
 # Verify database is running
-docker-compose ps
+docker compose ps
 ```
 
 #### 5. Run the Application
@@ -211,8 +213,8 @@ go run cmd/api/main.go
 You should see:
 
 ```
-Starting server on :8080
 Database connected successfully
+Server starting on port 8080
 ```
 
 #### 6. Test the API
@@ -221,7 +223,7 @@ Open a new terminal and test all endpoints:
 
 ```bash
 # Health check
-curl http://localhost:8080/api/v1/ping
+curl http://localhost:8080/api/v1/health
 
 # Set a value (this updates both blockchain and database)
 curl -X POST http://localhost:8080/api/v1/set \
@@ -238,29 +240,12 @@ curl -X POST http://localhost:8080/api/v1/sync
 curl http://localhost:8080/api/v1/check
 ```
 
-Expected responses:
+#### Expected responses:
 
 - **SET**: `{"message": "Value set successfully"}`
 - **GET**: `{"value": 42}`
 - **SYNC**: `{"message": "Value synchronized successfully", "value": 42}`
 - **CHECK**: `{"is_equal": true, "database_value": 42, "blockchain_value": 42}`
-
-### Solution Architecture
-
-The application follows a clean architecture pattern:
-
-```
-app/
-├── cmd/               # Application entry point
-├── internal/
-│   ├── handlers/          # HTTP request handlers (REST API layer)
-│   ├── usecases/          # Business logic layer
-│   ├── repositories/      # Data access layer
-│   ├── models/           # Data structures and DTOs
-│   ├── database/         # Database connection and schema
-│   └── routes/           # API route definitions
-└── docker-compose.yml    # Docker configuration for dependencies
-```
 
 #### Testing Workflow
 

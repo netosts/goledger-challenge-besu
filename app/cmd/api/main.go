@@ -24,6 +24,8 @@ func main() {
 	}
 	defer db.Close()
 
+	log.Printf("Database connected successfully")
+
 	if err := database.InitializeSchema(db); err != nil {
 		log.Fatalf("Failed to initialize database schema: %v", err)
 	}

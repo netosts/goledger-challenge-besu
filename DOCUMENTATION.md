@@ -1,10 +1,6 @@
 # Besu Blockchain Challenge - Go Application Documentation
 
-<!-- ## What This Application Does -->
-
-This is a simple Go application that acts as a bridge between a **blockchain network** (Besu) and a **traditional database** (PostgreSQL). Think of it as a translator that helps these two different systems talk to each other.
-
-<!-- ## The Big Picture -->
+This is a simple Go application that acts as a bridge between a blockchain network (Besu) and a database (PostgreSQL).
 
 Imagine you have:
 
@@ -109,6 +105,21 @@ DB_NAME=              # Database name
 
 ## Why This Architecture?
 
+The application follows a clean architecture pattern:
+
+```
+app/
+├── cmd/               # Application entry point
+├── internal/
+│   ├── handlers/          # HTTP request handlers (REST API layer)
+│   ├── usecases/          # Business logic layer
+│   ├── repositories/      # Data access layer
+│   ├── models/           # Data structures and DTOs
+│   ├── database/         # Database connection and schema
+│   └── routes/           # API route definitions
+└── docker-compose.yml    # Docker configuration for dependencies
+```
+
 1. **Clean Separation**: Each layer has one job
 
    - Handlers: Deal with HTTP requests/responses
@@ -122,3 +133,24 @@ DB_NAME=              # Database name
    - Invalid user input
 
 3. **Testability**: Each component can be tested independently
+
+### Components:
+
+- **Handlers**: HTTP request/response handling and validation
+- **Use Cases**: Core business logic for blockchain and database operations
+- **Repositories**: Database abstraction layer with PostgreSQL implementation
+- **Models**: Data structures for requests, responses, and database entities
+- **Database**: Connection management and schema initialization
+- **Routes**: API endpoint definitions and routing
+
+## API Endpoints
+
+### Base URL: `http://localhost:8080/api/v1`
+
+| Method | Endpoint  | Description                           |
+| ------ | --------- | ------------------------------------- |
+| `POST` | `/set`    | Set new value in smart contract       |
+| `GET`  | `/get`    | Get current value from blockchain     |
+| `POST` | `/sync`   | Sync blockchain value to database     |
+| `GET`  | `/check`  | Compare database vs blockchain values |
+| `GET`  | `/health` | Health check                          |
