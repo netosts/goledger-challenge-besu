@@ -11,9 +11,9 @@ To accomplish that, we recommend you use a UNIX-like machine (Linux/macOS). Besi
 - Install Docker and Docker Compose (https://www.docker.com/)
 - Install Besu (https://besu.hyperledger.org/private-networks/get-started/install/binary-distribution)
 - Install Go (https://golang.org/dl/)
-- Fork the repository https://github.com/goledgerdev/goledger-challenge-besu 
-    - Fork it, do **NOT** clone it, since you will need to send us your forked repository
-	- If you cannot fork it, create a private repository and give access to `samuelvenzi`
+- Fork the repository https://github.com/goledgerdev/goledger-challenge-besu
+  - Fork it, do **NOT** clone it, since you will need to send us your forked repository
+  - If you cannot fork it, create a private repository and give access to `samuelvenzi`
 
 ### Hardhat installation details
 
@@ -46,59 +46,236 @@ docker logs -f besu_node-0
 
 This will also deploy a smart contract to the network. The contract is a simple storage contract that has a variable that can be set and get. Note that it will log the contracts address, which will be important later. If you want to check the contract's source code, you can find it in the `contracts` folder. The contract's ABI can be found in the `/besu/artifacts/contracts/SimpleStorage.sol/SimpleStorage.json` file.
 
-# The challenge
+# The Challenge & Solution
 
 Your task is to create a simple application that interacts with a Besu blockchain network and an SQL database. The application should be implemented in Go and expose its functionality as either a REST API or a gRPC service.
 
+**✅ This repository includes a complete Go-based REST API solution that fulfills all requirements below.**
+
 ## Requirements
 
+**✅ All requirements below are implemented in the `app/` directory.**
+
 1. **Programming Language:**
-   - The application must be written in Go.
+
+   - ✅ The application must be written in Go.
 
 2. **API Type:**
-   - Choose either REST or gRPC for the service interface.
+
+   - ✅ REST API implemented using Gin framework
+   - ✅ Choose either REST or gRPC for the service interface.
    - If implementing gRPC, enable reflection so we can test it using tools like Postman.
 
 3. **Database Integration:**
-   - Use an SQL database (e.g., PostgreSQL or MySQL).
-   - Store the value of the smart contract variable in the database.
+
+   - ✅ PostgreSQL database with Docker Compose setup
+   - ✅ Use an SQL database (e.g., PostgreSQL or MySQL).
+   - ✅ Store the value of the smart contract variable in the database.
 
 4. **Endpoints:**
+
+   - ✅ All endpoints implemented and tested
    - The application should provide the following functionality via appropriately named endpoints or methods:
 
-     1. **SET:**
-        - Set a new value for the smart contract variable.
-        - The application should send this value to the deployed smart contract on the Besu network.
+     1. **SET:** (`POST /api/v1/set`)
 
-     2. **GET:**
-        - Retrieve the current value of the smart contract variable from the blockchain.
+        - ✅ Set a new value for the smart contract variable.
+        - ✅ The application should send this value to the deployed smart contract on the Besu network.
 
-     3. **SYNC:**
-        - Synchronize the value of the smart contract variable from the blockchain to the SQL database.
+     2. **GET:** (`GET /api/v1/get`)
 
-     4. **CHECK:**
-        - Compare the value stored in the database with the current value of the smart contract variable.
-        - Return `true` if they are the same, otherwise return `false`.
+        - ✅ Retrieve the current value of the smart contract variable from the blockchain.
+
+     3. **SYNC:** (`POST /api/v1/sync`)
+
+        - ✅ Synchronize the value of the smart contract variable from the blockchain to the SQL database.
+
+     4. **CHECK:** (`GET /api/v1/check`)
+        - ✅ Compare the value stored in the database with the current value of the smart contract variable.
+        - ✅ Return `true` if they are the same, otherwise return `false`.
 
    - **Endpoint Naming:**
-     - You may name the endpoints/methods as you see fit, provided their functionality meets the requirements outlined above.
+
+     - ✅ You may name the endpoints/methods as you see fit, provided their functionality meets the requirements outlined above.
 
    - **General Notes:**
-     - The Besu network will have a smart contract deployed that includes a single variable to store a value (similar to a SimpleStorage contract).
-     - Ensure the application handles blockchain interactions (reads/writes) correctly.
-     - Add appropriate error handling for all interactions (blockchain, database, and API).
+     - ✅ The Besu network will have a smart contract deployed that includes a single variable to store a value (similar to a SimpleStorage contract).
+     - ✅ Ensure the application handles blockchain interactions (reads/writes) correctly.
+     - ✅ Add appropriate error handling for all interactions (blockchain, database, and API).
 
 ## Deliverables
 
 1. **Source Code:**
-   - The source code of the application should be hosted on a public GitHub repository forked from this one.
-   - Include a README file with instructions on how to run the application.
+   - ✅ The source code of the application should be hosted on a public GitHub repository forked from this one.
+   - ✅ Include a README file with instructions on how to run the application.
 2. **Documentation:**
-   - Provide a brief explanation of the application's architecture and how it interacts with the Besu network and the SQL database.
-   - Include any additional information you think is relevant.
-   - This can be done in the README file or as a separate Markdown file.
+   - ✅ Provide a brief explanation of the application's architecture and how it interacts with the Besu network and the SQL database.
+   - ✅ Include any additional information you think is relevant.
+   - ✅ This can be done in the README file or as a separate Markdown file.
 
 Remember to commit your changes to your forked repository. Commits will be used during the evaluation process.
+
+---
+
+## Running the Solution
+
+### Prerequisites
+
+Ensure you have the following installed:
+
+- **Node.js** (v16+) and npm
+- **Docker** and Docker Compose
+- **Go** (v1.21+)
+- **Git**
+
+### Quick Start Guide
+
+Follow these steps to set up and test the complete application:
+
+#### 1. Clone and Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/netosts/goledger-challenge-besu.git
+cd goledger-challenge-besu
+
+# Install Hardhat dependencies
+cd besu
+npm install
+```
+
+#### 2. Start the Besu Network
+
+```bash
+# From the besu directory
+./startDev.sh
+```
+
+**Important:** Wait for the deployment to complete and **copy the contract address** from the logs. You'll see something like:
+
+```
+SimpleStorage deployed to: 0x42699A7612A82f1d9C36148af9C77354759b210b
+```
+
+#### 3. Setup the Go Application
+
+```bash
+# Navigate to the app directory
+cd ../app
+
+# Create environment file from example
+cp .env.example .env
+
+# Edit the .env file and update the CONTRACT_ADDRESS with the one from step 2
+```
+
+Your `.env` file should look like this (update the CONTRACT_ADDRESS with the actual deployed address and the private key from genesis.json file in besu directory):
+
+```bash
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=password
+DB_NAME=besu_challenge
+
+# Server Configuration
+PORT=8080
+
+# Blockchain Configuration
+NODE_URL=http://localhost:8545
+CONTRACT_ADDRESS=0x42699A7612A82f1d9C36148af9C77354759b210b  # UPDATE THIS
+PRIVATE_KEY=8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63 # Update with genesis.json file private key
+```
+
+#### 4. Start the Database
+
+```bash
+# Start PostgreSQL database
+docker-compose up -d postgres
+
+# Verify database is running
+docker-compose ps
+```
+
+#### 5. Run the Application
+
+```bash
+# Install Go dependencies
+go mod download
+
+# Run the application
+go run cmd/api/main.go
+```
+
+You should see:
+
+```
+Starting server on :8080
+Database connected successfully
+```
+
+#### 6. Test the API
+
+Open a new terminal and test all endpoints:
+
+```bash
+# Health check
+curl http://localhost:8080/api/v1/ping
+
+# Set a value (this updates both blockchain and database)
+curl -X POST http://localhost:8080/api/v1/set \
+  -H "Content-Type: application/json" \
+  -d '{"value": 42}'
+
+# Get current value from blockchain
+curl http://localhost:8080/api/v1/get
+
+# Sync blockchain value to database
+curl -X POST http://localhost:8080/api/v1/sync
+
+# Check if database and blockchain values match
+curl http://localhost:8080/api/v1/check
+```
+
+Expected responses:
+
+- **SET**: `{"message": "Value set successfully"}`
+- **GET**: `{"value": 42}`
+- **SYNC**: `{"message": "Value synchronized successfully", "value": 42}`
+- **CHECK**: `{"is_equal": true, "database_value": 42, "blockchain_value": 42}`
+
+### Solution Architecture
+
+The application follows a clean architecture pattern:
+
+```
+app/
+├── cmd/               # Application entry point
+├── internal/
+│   ├── handlers/          # HTTP request handlers (REST API layer)
+│   ├── usecases/          # Business logic layer
+│   ├── repositories/      # Data access layer
+│   ├── models/           # Data structures and DTOs
+│   ├── database/         # Database connection and schema
+│   └── routes/           # API route definitions
+└── docker-compose.yml    # Docker configuration for dependencies
+```
+
+#### Testing Workflow
+
+For a complete test cycle:
+
+1. **Start all services** (Besu network + database)
+2. **Set a value**: `POST /api/v1/set` with `{"value": 123}`
+3. **Verify blockchain**: `GET /api/v1/get` should return `{"value": 123}`
+4. **Sync to database**: `POST /api/v1/sync`
+5. **Check consistency**: `GET /api/v1/check` should return `{"is_equal": true, ...}`
+6. **Test with different values** and repeat
+
+For detailed API documentation, see [`app/README.md`](./app/README.md).
+
+---
 
 ## Interaction with the Besu network
 
