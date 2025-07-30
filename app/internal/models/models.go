@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 type StoredValue struct {
 	ID        int       `json:"id" db:"id"`
@@ -29,4 +32,12 @@ type SuccessResponse struct {
 
 type ErrorResponse struct {
 	Error string `json:"error"`
+}
+
+func (r *SetValueRequest) IsValid() error {
+	if r.Value > 1e18 {
+		return errors.New("value is too large")
+	}
+
+	return nil
 }

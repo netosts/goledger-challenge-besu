@@ -29,9 +29,9 @@ func (h *Handler) SetValue(c *gin.Context) {
 		return
 	}
 
-	if req.Value > 1e18 {
+	if err := req.IsValid(); err != nil {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
-			Error: "Value too large",
+			Error: err.Error(),
 		})
 		return
 	}
