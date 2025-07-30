@@ -222,10 +222,7 @@ Server starting on port 8080
 Open a new terminal and test all endpoints:
 
 ```bash
-# Health check
-curl http://localhost:8080/api/v1/health
-
-# Set a value (this updates both blockchain and database)
+# Set a value (this updates blockchain value)
 curl -X POST http://localhost:8080/api/v1/set \
   -H "Content-Type: application/json" \
   -d '{"value": 42}'
@@ -251,7 +248,7 @@ curl http://localhost:8080/api/v1/check
 
 For a complete test cycle:
 
-1. **Start all services** (Besu network + database)
+1. **Start all services** (Besu network + database + go application)
 2. **Set a value**: `POST /api/v1/set` with `{"value": 123}`
 3. **Verify blockchain**: `GET /api/v1/get` should return `{"value": 123}`
 4. **Sync to database**: `POST /api/v1/sync`

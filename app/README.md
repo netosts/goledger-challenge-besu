@@ -24,7 +24,7 @@ Imagine you have:
 
 3. **Database Layer** ([`repositories/repositories.go`](app/internal/repositories/repositories.go))
 
-   - Handles all database operations (save, retrieve, update)
+   - Handles all database operations (get, update)
    - Keeps a local copy of the blockchain value
 
 4. **Blockchain Communication**
