@@ -11,10 +11,10 @@ import (
 )
 
 type Handler struct {
-	contractUseCase *usecases.ContractUseCase
+	contractUseCase usecases.ContractUseCaseInterface
 }
 
-func NewHandler(contractUseCase *usecases.ContractUseCase) *Handler {
+func NewHandler(contractUseCase usecases.ContractUseCaseInterface) *Handler {
 	return &Handler{
 		contractUseCase: contractUseCase,
 	}

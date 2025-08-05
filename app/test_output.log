@@ -1,0 +1,68 @@
+	github.com/netosts/goledger-challenge-besu/internal/database		coverage: 0.0% of statements
+=== RUN   TestHandler_HealthCheck
+--- PASS: TestHandler_HealthCheck (0.00s)
+=== RUN   TestHandler_SetValue_Success
+2025/08/05 16:20:38 Setting value to 42
+--- PASS: TestHandler_SetValue_Success (0.00s)
+=== RUN   TestHandler_SetValue_InvalidJSON
+--- PASS: TestHandler_SetValue_InvalidJSON (0.00s)
+=== RUN   TestHandler_SetValue_InvalidValue
+--- PASS: TestHandler_SetValue_InvalidValue (0.00s)
+=== RUN   TestHandler_SetValue_UseCaseError
+2025/08/05 16:20:38 Setting value to 42
+2025/08/05 16:20:38 Failed to set value: blockchain connection failed
+--- PASS: TestHandler_SetValue_UseCaseError (0.00s)
+=== RUN   TestHandler_GetValue_Success
+--- PASS: TestHandler_GetValue_Success (0.00s)
+=== RUN   TestHandler_GetValue_Error
+--- PASS: TestHandler_GetValue_Error (0.00s)
+=== RUN   TestHandler_SyncValue_Success
+--- PASS: TestHandler_SyncValue_Success (0.00s)
+=== RUN   TestHandler_SyncValue_Error
+--- PASS: TestHandler_SyncValue_Error (0.00s)
+=== RUN   TestHandler_CheckValue_Success
+--- PASS: TestHandler_CheckValue_Success (0.00s)
+=== RUN   TestHandler_CheckValue_Error
+--- PASS: TestHandler_CheckValue_Error (0.00s)
+PASS
+coverage: 100.0% of statements
+ok  	github.com/netosts/goledger-challenge-besu/internal/handlers	0.034s	coverage: 100.0% of statements
+=== RUN   TestSetValueRequest_IsValid
+=== RUN   TestSetValueRequest_IsValid/valid_small_value
+=== RUN   TestSetValueRequest_IsValid/valid_zero_value
+=== RUN   TestSetValueRequest_IsValid/valid_large_value
+=== RUN   TestSetValueRequest_IsValid/valid_max_allowed_value
+=== RUN   TestSetValueRequest_IsValid/invalid_too_large_value
+=== RUN   TestSetValueRequest_IsValid/invalid_very_large_value
+--- PASS: TestSetValueRequest_IsValid (0.00s)
+    --- PASS: TestSetValueRequest_IsValid/valid_small_value (0.00s)
+    --- PASS: TestSetValueRequest_IsValid/valid_zero_value (0.00s)
+    --- PASS: TestSetValueRequest_IsValid/valid_large_value (0.00s)
+    --- PASS: TestSetValueRequest_IsValid/valid_max_allowed_value (0.00s)
+    --- PASS: TestSetValueRequest_IsValid/invalid_too_large_value (0.00s)
+    --- PASS: TestSetValueRequest_IsValid/invalid_very_large_value (0.00s)
+=== RUN   TestSetValueRequest_IsValid_ErrorMessage
+--- PASS: TestSetValueRequest_IsValid_ErrorMessage (0.00s)
+PASS
+coverage: 100.0% of statements
+ok  	github.com/netosts/goledger-challenge-besu/internal/models	0.003s	coverage: 100.0% of statements
+=== RUN   TestPostgresRepository_SetValue_Insert
+    repositories_test.go:14: Repository tests require a test database. Run integration tests instead.
+--- SKIP: TestPostgresRepository_SetValue_Insert (0.00s)
+=== RUN   TestPostgresRepository_SetValue_Update
+    repositories_test.go:14: Repository tests require a test database. Run integration tests instead.
+--- SKIP: TestPostgresRepository_SetValue_Update (0.00s)
+=== RUN   TestPostgresRepository_GetLatestValue_NoData
+    repositories_test.go:14: Repository tests require a test database. Run integration tests instead.
+--- SKIP: TestPostgresRepository_GetLatestValue_NoData (0.00s)
+=== RUN   TestPostgresRepository_GetLatestValue_WithData
+    repositories_test.go:14: Repository tests require a test database. Run integration tests instead.
+--- SKIP: TestPostgresRepository_GetLatestValue_WithData (0.00s)
+=== RUN   TestPostgresRepository_MultipleValues
+    repositories_test.go:14: Repository tests require a test database. Run integration tests instead.
+--- SKIP: TestPostgresRepository_MultipleValues (0.00s)
+PASS
+coverage: 0.0% of statements
+ok  	github.com/netosts/goledger-challenge-besu/internal/repositories	0.004s	coverage: 0.0% of statements
+	github.com/netosts/goledger-challenge-besu/internal/routes		coverage: 0.0% of statements
+	github.com/netosts/goledger-challenge-besu/internal/services		coverage: 0.0% of statements

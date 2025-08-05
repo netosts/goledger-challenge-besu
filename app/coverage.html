@@ -1,0 +1,688 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>database: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/netosts/goledger-challenge-besu/internal/database/database.go (0.0%)</option>
+				
+				<option value="file1">github.com/netosts/goledger-challenge-besu/internal/handlers/handlers.go (100.0%)</option>
+				
+				<option value="file2">github.com/netosts/goledger-challenge-besu/internal/models/models.go (100.0%)</option>
+				
+				<option value="file3">github.com/netosts/goledger-challenge-besu/internal/repositories/repositories.go (0.0%)</option>
+				
+				<option value="file4">github.com/netosts/goledger-challenge-besu/internal/routes/contract.go (0.0%)</option>
+				
+				<option value="file5">github.com/netosts/goledger-challenge-besu/internal/routes/routes.go (0.0%)</option>
+				
+				<option value="file6">github.com/netosts/goledger-challenge-besu/internal/services/services.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package database
+
+import (
+        "database/sql"
+        "fmt"
+        "os"
+
+        _ "github.com/lib/pq"
+)
+
+type Config struct {
+        Host     string
+        Port     string
+        User     string
+        Password string
+        DBName   string
+}
+
+func NewConfig() *Config <span class="cov0" title="0">{
+        return &amp;Config{
+                Host:     getEnvOrDefault("DB_HOST", "localhost"),
+                Port:     getEnvOrDefault("DB_PORT", "5432"),
+                User:     getEnvOrDefault("DB_USER", "postgres"),
+                Password: getEnvOrDefault("DB_PASSWORD", "password"),
+                DBName:   getEnvOrDefault("DB_NAME", "besu_challenge"),
+        }
+}</span>
+
+func (c *Config) Connect() (*sql.DB, error) <span class="cov0" title="0">{
+        psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+                c.Host, c.Port, c.User, c.Password, c.DBName)
+
+        db, err := sql.Open("postgres", psqlInfo)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to open database: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">if err := db.Ping(); err != nil </span><span class="cov0" title="0">{
+                db.Close()
+                return nil, fmt.Errorf("failed to ping database: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return db, nil</span>
+}
+
+func InitializeSchema(db *sql.DB) error <span class="cov0" title="0">{
+        query := `
+        CREATE TABLE IF NOT EXISTS contract_values (
+                id SERIAL PRIMARY KEY,
+                value BIGINT NOT NULL,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+
+        -- Insert initial record if none exists
+        INSERT INTO contract_values (value) 
+        SELECT 0 
+        WHERE NOT EXISTS (SELECT 1 FROM contract_values);
+        `
+
+        _, err := db.Exec(query)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to initialize schema: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+func getEnvOrDefault(key, defaultValue string) string <span class="cov0" title="0">{
+        if value := os.Getenv(key); value != "" </span><span class="cov0" title="0">{
+                return value
+        }</span>
+        <span class="cov0" title="0">return defaultValue</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package handlers
+
+import (
+        "net/http"
+
+        "log"
+
+        "github.com/gin-gonic/gin"
+        "github.com/netosts/goledger-challenge-besu/internal/models"
+        "github.com/netosts/goledger-challenge-besu/internal/services"
+)
+
+type Handler struct {
+        contractUseCase services.ContractUseCaseInterface
+}
+
+func NewHandler(contractUseCase services.ContractUseCaseInterface) *Handler <span class="cov8" title="1">{
+        return &amp;Handler{
+                contractUseCase: contractUseCase,
+        }
+}</span>
+
+func (h *Handler) SetValue(c *gin.Context) <span class="cov8" title="1">{
+        var req models.SetValueRequest
+        if err := c.ShouldBindJSON(&amp;req); err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusBadRequest, models.ErrorResponse{
+                        Error: "Invalid request payload: " + err.Error(),
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">if err := req.IsValid(); err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusBadRequest, models.ErrorResponse{
+                        Error: err.Error(),
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">log.Printf("Setting value to %d", req.Value)
+
+        if err := h.contractUseCase.SetValue(req.Value); err != nil </span><span class="cov8" title="1">{
+                log.Printf("Failed to set value: %v", err)
+                c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+                        Error: "Failed to set value: " + err.Error(),
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusOK, models.SuccessResponse{
+                Message: "Value set successfully",
+        })</span>
+}
+
+func (h *Handler) GetValue(c *gin.Context) <span class="cov8" title="1">{
+        value, err := h.contractUseCase.GetValue()
+        if err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+                        Error: "Failed to get value: " + err.Error(),
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusOK, models.ValueResponse{
+                Value: value,
+        })</span>
+}
+
+func (h *Handler) SyncValue(c *gin.Context) <span class="cov8" title="1">{
+        if err := h.contractUseCase.SyncValue(); err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+                        Error: "Failed to sync value: " + err.Error(),
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusOK, models.SuccessResponse{
+                Message: "Value synchronized successfully",
+        })</span>
+}
+
+func (h *Handler) CheckValue(c *gin.Context) <span class="cov8" title="1">{
+        result, err := h.contractUseCase.CheckValue()
+        if err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+                        Error: "Failed to check values: " + err.Error(),
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusOK, result)</span>
+}
+
+func (h *Handler) HealthCheck(c *gin.Context) <span class="cov8" title="1">{
+        c.JSON(http.StatusOK, models.SuccessResponse{
+                Message: "Service is healthy",
+        })
+}</span>
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package models
+
+import (
+        "errors"
+        "time"
+)
+
+type StoredValue struct {
+        ID        int       `json:"id" db:"id"`
+        Value     uint64    `json:"value" db:"value"`
+        CreatedAt time.Time `json:"created_at" db:"created_at"`
+        UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+}
+
+type SetValueRequest struct {
+        Value uint64 `json:"value" binding:"required"`
+}
+
+type ValueResponse struct {
+        Value uint64 `json:"value"`
+}
+
+type CheckResponse struct {
+        IsEqual         bool   `json:"is_equal"`
+        DatabaseValue   uint64 `json:"database_value"`
+        BlockchainValue uint64 `json:"blockchain_value"`
+}
+
+type SuccessResponse struct {
+        Message string `json:"message"`
+}
+
+type ErrorResponse struct {
+        Error string `json:"error"`
+}
+
+func (r *SetValueRequest) IsValid() error <span class="cov8" title="1">{
+        if r.Value &gt; 1e18 </span><span class="cov8" title="1">{
+                return errors.New("value is too large")
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package repositories
+
+import (
+        "database/sql"
+        "fmt"
+        "time"
+
+        "github.com/netosts/goledger-challenge-besu/internal/models"
+)
+
+type Repository interface {
+        GetLatestValue() (*models.StoredValue, error)
+        SetValue(value uint64) error
+        Close() error
+}
+
+type PostgresRepository struct {
+        db *sql.DB
+}
+
+func NewPostgresRepository(db *sql.DB) *PostgresRepository <span class="cov0" title="0">{
+        return &amp;PostgresRepository{db: db}
+}</span>
+
+func (r *PostgresRepository) GetLatestValue() (*models.StoredValue, error) <span class="cov0" title="0">{
+        var sv models.StoredValue
+        query := `SELECT id, value, created_at, updated_at FROM contract_values ORDER BY updated_at DESC LIMIT 1`
+
+        err := r.db.QueryRow(query).Scan(&amp;sv.ID, &amp;sv.Value, &amp;sv.CreatedAt, &amp;sv.UpdatedAt)
+        if err != nil </span><span class="cov0" title="0">{
+                if err == sql.ErrNoRows </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("no values found in database")
+                }</span>
+                <span class="cov0" title="0">return nil, fmt.Errorf("failed to get value: %w", err)</span>
+        }
+
+        <span class="cov0" title="0">return &amp;sv, nil</span>
+}
+
+func (r *PostgresRepository) SetValue(value uint64) error <span class="cov0" title="0">{
+        query := `
+        UPDATE contract_values 
+        SET value = $1, updated_at = $2 
+        WHERE id = (SELECT id FROM contract_values ORDER BY updated_at DESC LIMIT 1)
+        `
+
+        result, err := r.db.Exec(query, value, time.Now())
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to set value: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">rowsAffected, err := result.RowsAffected()
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to check affected rows: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">if rowsAffected == 0 </span><span class="cov0" title="0">{
+                insertQuery := `INSERT INTO contract_values (value, created_at, updated_at) VALUES ($1, $2, $2)`
+                _, err := r.db.Exec(insertQuery, value, time.Now())
+                if err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to insert initial value: %w", err)
+                }</span>
+        }
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (r *PostgresRepository) Close() error <span class="cov0" title="0">{
+        return r.db.Close()
+}</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package routes
+
+import (
+        "github.com/gin-gonic/gin"
+        "github.com/netosts/goledger-challenge-besu/internal/handlers"
+)
+
+func SetupContractRoutes(router *gin.RouterGroup, handler *handlers.Handler) <span class="cov0" title="0">{
+        router.GET("/health", handler.HealthCheck)
+
+        router.POST("/set", handler.SetValue)
+        router.GET("/get", handler.GetValue)
+        router.POST("/sync", handler.SyncValue)
+        router.GET("/check", handler.CheckValue)
+}</span>
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package routes
+
+import (
+        "github.com/gin-gonic/gin"
+        "github.com/netosts/goledger-challenge-besu/internal/handlers"
+)
+
+func SetupRoutes(handler *handlers.Handler) *gin.Engine <span class="cov0" title="0">{
+        router := gin.Default()
+
+        v1 := router.Group("/api/v1")
+        </span><span class="cov0" title="0">{
+                SetupContractRoutes(v1, handler)
+        }</span>
+
+        <span class="cov0" title="0">return router</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package services
+
+import (
+        "context"
+        "crypto/ecdsa"
+        "fmt"
+        "log"
+        "math/big"
+        "os"
+        "strings"
+        "time"
+
+        "github.com/ethereum/go-ethereum/accounts/abi"
+        "github.com/ethereum/go-ethereum/accounts/abi/bind"
+        "github.com/ethereum/go-ethereum/common"
+        "github.com/ethereum/go-ethereum/crypto"
+        "github.com/ethereum/go-ethereum/ethclient"
+        "github.com/netosts/goledger-challenge-besu/internal/models"
+        "github.com/netosts/goledger-challenge-besu/internal/repositories"
+)
+
+type ContractUseCase struct {
+        repo            repositories.Repository
+        client          *ethclient.Client
+        contractABI     abi.ABI
+        contractAddress common.Address
+        privateKey      *ecdsa.PrivateKey
+        chainID         *big.Int
+}
+
+func NewContractUseCase(repo repositories.Repository) (*ContractUseCase, error) <span class="cov0" title="0">{
+        // Parse ABI only once during initialization
+        contractABI, err := abi.JSON(strings.NewReader(SimpleStorageABI))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to parse contract ABI: %w", err)
+        }</span>
+
+        // Create client connection only once
+        <span class="cov0" title="0">nodeURL := getEnvOrDefault("NODE_URL", "http://localhost:8545")
+        client, err := ethclient.Dial(nodeURL)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to connect to Ethereum client: %w", err)
+        }</span>
+
+        // Get chain ID once
+        <span class="cov0" title="0">chainID, err := client.ChainID(context.Background())
+        if err != nil </span><span class="cov0" title="0">{
+                client.Close()
+                return nil, fmt.Errorf("failed to get chain ID: %w", err)
+        }</span>
+
+        // Parse contract address
+        <span class="cov0" title="0">contractAddress := common.HexToAddress(getEnvOrDefault("CONTRACT_ADDRESS", ""))
+        if contractAddress == (common.Address{}) </span><span class="cov0" title="0">{
+                client.Close()
+                return nil, fmt.Errorf("CONTRACT_ADDRESS environment variable is required")
+        }</span>
+
+        // Parse private key
+        <span class="cov0" title="0">privateKeyHex := getEnvOrDefault("PRIVATE_KEY", "")
+        if privateKeyHex == "" </span><span class="cov0" title="0">{
+                client.Close()
+                return nil, fmt.Errorf("PRIVATE_KEY environment variable is required")
+        }</span>
+
+        <span class="cov0" title="0">privateKey, err := crypto.HexToECDSA(privateKeyHex)
+        if err != nil </span><span class="cov0" title="0">{
+                client.Close()
+                return nil, fmt.Errorf("failed to parse private key: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return &amp;ContractUseCase{
+                repo:            repo,
+                client:          client,
+                contractABI:     contractABI,
+                contractAddress: contractAddress,
+                privateKey:      privateKey,
+                chainID:         chainID,
+        }, nil</span>
+}
+
+// Close closes the Ethereum client connection
+func (uc *ContractUseCase) Close() <span class="cov0" title="0">{
+        if uc.client != nil </span><span class="cov0" title="0">{
+                uc.client.Close()
+        }</span>
+}
+
+// SimpleStorage ABI - this should match the deployed contract
+const SimpleStorageABI = `[
+        {
+                "inputs": [],
+                "name": "get",
+                "outputs": [
+                        {
+                                "internalType": "uint256",
+                                "name": "",
+                                "type": "uint256"
+                        }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+        },
+        {
+                "inputs": [
+                        {
+                                "internalType": "uint256",
+                                "name": "x",
+                                "type": "uint256"
+                        }
+                ],
+                "name": "set",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+        }
+]`
+
+func (uc *ContractUseCase) SetValue(value uint64) error <span class="cov0" title="0">{
+        if err := uc.setBlockchainValue(value); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to set blockchain value: %w", err)
+        }</span>
+
+        // if err := uc.repo.SetValue(value); err != nil {
+        //         return fmt.Errorf("failed to update database: %w", err)
+        // }
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (uc *ContractUseCase) GetValue() (uint64, error) <span class="cov0" title="0">{
+        return uc.getBlockchainValue()
+}</span>
+
+func (uc *ContractUseCase) SyncValue() error <span class="cov0" title="0">{
+        blockchainValue, err := uc.getBlockchainValue()
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to get blockchain value: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">if err := uc.repo.SetValue(blockchainValue); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to sync to database: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (uc *ContractUseCase) CheckValue() (*models.CheckResponse, error) <span class="cov0" title="0">{
+        blockchainValue, err := uc.getBlockchainValue()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to get blockchain value: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">storedValue, err := uc.repo.GetLatestValue()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to get database value: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">response := &amp;models.CheckResponse{
+                IsEqual:         blockchainValue == storedValue.Value,
+                DatabaseValue:   storedValue.Value,
+                BlockchainValue: blockchainValue,
+        }
+
+        return response, nil</span>
+}
+
+func (uc *ContractUseCase) setBlockchainValue(value uint64) error <span class="cov0" title="0">{
+        ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+        defer cancel()
+
+        boundContract := bind.NewBoundContract(
+                uc.contractAddress,
+                uc.contractABI,
+                uc.client,
+                uc.client,
+                uc.client,
+        )
+
+        auth, err := bind.NewKeyedTransactorWithChainID(uc.privateKey, uc.chainID)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to create transactor: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">auth.GasLimit = uint64(300000)
+        auth.Context = ctx
+
+        log.Printf("Setting blockchain value to %d", value)
+        tx, err := boundContract.Transact(auth, "set", big.NewInt(int64(value)))
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to execute transaction: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">fmt.Printf("Waiting until transaction is mined, tx: %s\n", tx.Hash().Hex())
+
+        receipt, err := bind.WaitMined(ctx, uc.client, tx)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to wait for transaction to be mined: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">log.Printf("Transaction mined in block %d", receipt.BlockNumber.Uint64())
+        return nil</span>
+}
+
+func (uc *ContractUseCase) getBlockchainValue() (uint64, error) <span class="cov0" title="0">{
+        ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+        defer cancel()
+
+        caller := bind.CallOpts{
+                Pending: false,
+                Context: ctx,
+        }
+
+        boundContract := bind.NewBoundContract(
+                uc.contractAddress,
+                uc.contractABI,
+                uc.client,
+                uc.client,
+                uc.client,
+        )
+
+        var output []interface{}
+        err := boundContract.Call(&amp;caller, &amp;output, "get")
+        if err != nil </span><span class="cov0" title="0">{
+                return 0, fmt.Errorf("failed to call contract: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">if len(output) == 0 </span><span class="cov0" title="0">{
+                return 0, fmt.Errorf("no output from contract call")
+        }</span>
+
+        <span class="cov0" title="0">result, ok := output[0].(*big.Int)
+        if !ok </span><span class="cov0" title="0">{
+                return 0, fmt.Errorf("unexpected output type from contract call")
+        }</span>
+
+        <span class="cov0" title="0">return result.Uint64(), nil</span>
+}
+
+func getEnvOrDefault(key, defaultValue string) string <span class="cov0" title="0">{
+        if value := os.Getenv(key); value != "" </span><span class="cov0" title="0">{
+                return value
+        }</span>
+        <span class="cov0" title="0">return defaultValue</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

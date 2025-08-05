@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"crypto/ecdsa"
 	"fmt"
 	"log"
 	"math/big"
@@ -19,12 +20,69 @@ import (
 )
 
 type ContractUseCase struct {
-	repo repositories.Repository
+	repo            repositories.Repository
+	client          *ethclient.Client
+	contractABI     abi.ABI
+	contractAddress common.Address
+	privateKey      *ecdsa.PrivateKey
+	chainID         *big.Int
 }
 
-func NewContractUseCase(repo repositories.Repository) *ContractUseCase {
+func NewContractUseCase(repo repositories.Repository) (*ContractUseCase, error) {
+	// Parse ABI only once during initialization
+	contractABI, err := abi.JSON(strings.NewReader(SimpleStorageABI))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse contract ABI: %w", err)
+	}
+
+	// Create client connection only once
+	nodeURL := getEnvOrDefault("NODE_URL", "http://localhost:8545")
+	client, err := ethclient.Dial(nodeURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to Ethereum client: %w", err)
+	}
+
+	// Get chain ID once
+	chainID, err := client.ChainID(context.Background())
+	if err != nil {
+		client.Close()
+		return nil, fmt.Errorf("failed to get chain ID: %w", err)
+	}
+
+	// Parse contract address
+	contractAddress := common.HexToAddress(getEnvOrDefault("CONTRACT_ADDRESS", ""))
+	if contractAddress == (common.Address{}) {
+		client.Close()
+		return nil, fmt.Errorf("CONTRACT_ADDRESS environment variable is required")
+	}
+
+	// Parse private key
+	privateKeyHex := getEnvOrDefault("PRIVATE_KEY", "")
+	if privateKeyHex == "" {
+		client.Close()
+		return nil, fmt.Errorf("PRIVATE_KEY environment variable is required")
+	}
+
+	privateKey, err := crypto.HexToECDSA(privateKeyHex)
+	if err != nil {
+		client.Close()
+		return nil, fmt.Errorf("failed to parse private key: %w", err)
+	}
+
 	return &ContractUseCase{
-		repo: repo,
+		repo:            repo,
+		client:          client,
+		contractABI:     contractABI,
+		contractAddress: contractAddress,
+		privateKey:      privateKey,
+		chainID:         chainID,
+	}, nil
+}
+
+// Close closes the Ethereum client connection
+func (uc *ContractUseCase) Close() {
+	if uc.client != nil {
+		uc.client.Close()
 	}
 }
 
@@ -108,55 +166,24 @@ func (uc *ContractUseCase) CheckValue() (*models.CheckResponse, error) {
 }
 
 func (uc *ContractUseCase) setBlockchainValue(value uint64) error {
-	abi, err := abi.JSON(strings.NewReader(SimpleStorageABI))
-	if err != nil {
-		return fmt.Errorf("failed to parse ABI: %w", err)
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	nodeURL := getEnvOrDefault("NODE_URL", "http://localhost:8545")
-	client, err := ethclient.DialContext(ctx, nodeURL)
-	if err != nil {
-		return fmt.Errorf("failed to connect to Ethereum client: %w", err)
-	}
-	defer client.Close()
-
-	chainID, err := client.ChainID(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get chain ID: %w", err)
-	}
-
-	contractAddress := common.HexToAddress(getEnvOrDefault("CONTRACT_ADDRESS", ""))
-	if contractAddress == (common.Address{}) {
-		return fmt.Errorf("CONTRACT_ADDRESS environment variable is required")
-	}
-
 	boundContract := bind.NewBoundContract(
-		contractAddress,
-		abi,
-		client,
-		client,
-		client,
+		uc.contractAddress,
+		uc.contractABI,
+		uc.client,
+		uc.client,
+		uc.client,
 	)
 
-	privateKeyHex := getEnvOrDefault("PRIVATE_KEY", "")
-	if privateKeyHex == "" {
-		return fmt.Errorf("PRIVATE_KEY environment variable is required")
-	}
-
-	priv, err := crypto.HexToECDSA(privateKeyHex)
-	if err != nil {
-		return fmt.Errorf("failed to parse private key: %w", err)
-	}
-
-	auth, err := bind.NewKeyedTransactorWithChainID(priv, chainID)
+	auth, err := bind.NewKeyedTransactorWithChainID(uc.privateKey, uc.chainID)
 	if err != nil {
 		return fmt.Errorf("failed to create transactor: %w", err)
 	}
 
 	auth.GasLimit = uint64(300000)
+	auth.Context = ctx
 
 	log.Printf("Setting blockchain value to %d", value)
 	tx, err := boundContract.Transact(auth, "set", big.NewInt(int64(value)))
@@ -164,11 +191,9 @@ func (uc *ContractUseCase) setBlockchainValue(value uint64) error {
 		return fmt.Errorf("failed to execute transaction: %w", err)
 	}
 
-	fmt.Println("waiting until transaction is mined",
-		"tx", tx.Hash().Hex(),
-	)
+	fmt.Printf("Waiting until transaction is mined, tx: %s\n", tx.Hash().Hex())
 
-	receipt, err := bind.WaitMined(ctx, client, tx)
+	receipt, err := bind.WaitMined(ctx, uc.client, tx)
 	if err != nil {
 		return fmt.Errorf("failed to wait for transaction to be mined: %w", err)
 	}
@@ -178,25 +203,8 @@ func (uc *ContractUseCase) setBlockchainValue(value uint64) error {
 }
 
 func (uc *ContractUseCase) getBlockchainValue() (uint64, error) {
-	abi, err := abi.JSON(strings.NewReader(SimpleStorageABI))
-	if err != nil {
-		return 0, fmt.Errorf("failed to parse ABI: %w", err)
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-
-	nodeURL := getEnvOrDefault("NODE_URL", "http://localhost:8545")
-	client, err := ethclient.DialContext(ctx, nodeURL)
-	if err != nil {
-		return 0, fmt.Errorf("failed to connect to Ethereum client: %w", err)
-	}
-	defer client.Close()
-
-	contractAddress := common.HexToAddress(getEnvOrDefault("CONTRACT_ADDRESS", ""))
-	if contractAddress == (common.Address{}) {
-		return 0, fmt.Errorf("CONTRACT_ADDRESS environment variable is required")
-	}
 
 	caller := bind.CallOpts{
 		Pending: false,
@@ -204,15 +212,15 @@ func (uc *ContractUseCase) getBlockchainValue() (uint64, error) {
 	}
 
 	boundContract := bind.NewBoundContract(
-		contractAddress,
-		abi,
-		client,
-		client,
-		client,
+		uc.contractAddress,
+		uc.contractABI,
+		uc.client,
+		uc.client,
+		uc.client,
 	)
 
 	var output []interface{}
-	err = boundContract.Call(&caller, &output, "get")
+	err := boundContract.Call(&caller, &output, "get")
 	if err != nil {
 		return 0, fmt.Errorf("failed to call contract: %w", err)
 	}

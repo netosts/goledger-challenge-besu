@@ -154,3 +154,96 @@ app/
 | `POST` | `/sync`   | Sync blockchain value to database     |
 | `GET`  | `/check`  | Compare database vs blockchain values |
 | `GET`  | `/health` | Health check                          |
+
+## Testing
+
+This project includes comprehensive automated tests to ensure code quality and reliability.
+
+### Test Types
+
+- **Unit Tests**: Test individual components in isolation
+
+  - Models validation and data structures
+  - Handlers with mocked dependencies
+  - Repository operations (integration tests)
+
+- **Integration Tests**: Test complete workflows with real database
+
+### Running Tests
+
+```bash
+# Run all tests
+make test
+
+# Run only unit tests
+make test-unit
+
+# Run tests with coverage report
+make test-coverage
+
+# Run specific test suites
+make test-models
+make test-handlers
+make test-usecases
+```
+
+For detailed testing documentation, see [`TESTING.md`](./TESTING.md).
+
+## Performance Optimizations
+
+The application includes several performance optimizations based on feedback:
+
+### 1. **Blockchain Client Optimization**
+
+- **Before**: New client connection created for each operation
+- **After**: Single persistent client connection shared across operations
+- **Impact**: Reduces connection overhead and improves response time
+
+### 2. **ABI Parsing Optimization**
+
+- **Before**: Contract ABI parsed on every blockchain operation
+- **After**: ABI parsed once during service initialization
+- **Impact**: Eliminates redundant parsing overhead
+
+### 3. **Configuration Caching**
+
+- **Before**: Environment variables read on each operation
+- **After**: Configuration loaded once during initialization
+- **Impact**: Reduces repeated environment variable access
+
+### Implementation Details
+
+```go
+type ContractUseCase struct {
+    repo            repositories.Repository
+    client          *ethclient.Client      // Persistent connection
+    contractABI     abi.ABI               // Pre-parsed ABI
+    contractAddress common.Address        // Cached address
+    privateKey      *ecdsa.PrivateKey     // Cached key
+    chainID         *big.Int              // Cached chain ID
+}
+```
+
+## Architecture Improvements
+
+### 1. **Service Layer Naming**
+
+- Maintained `usecases` package naming as originally implemented
+- Updated all imports and references accordingly
+
+### 2. **Interface Abstraction**
+
+- Added `ContractUseCaseInterface` for better testability
+- Enables dependency injection and mocking
+
+### 3. **Resource Management**
+
+- Added proper cleanup with `Close()` method
+- Ensures blockchain connections are properly closed
+
+## Code Quality
+
+- **Test Coverage**: Comprehensive test suite covering all major components
+- **Error Handling**: Robust error handling across all layers
+- **Documentation**: Clear documentation and code comments
+- **Performance**: Optimized for production use

@@ -32,7 +32,11 @@ func main() {
 
 	dbRepo := repositories.NewPostgresRepository(db)
 
-	contractUseCase := usecases.NewContractUseCase(dbRepo)
+	contractUseCase, err := usecases.NewContractUseCase(dbRepo)
+	if err != nil {
+		log.Fatalf("Failed to initialize contract use case: %v", err)
+	}
+	defer contractUseCase.Close()
 
 	handler := handlers.NewHandler(contractUseCase)
 
